@@ -110,7 +110,8 @@ public final class CanonicalNameConstants {
 	 * HoloEverywhere
 	 */
 	public static final String HOLO_EVERYWHERE_LAYOUT_INFLATER = "org.holoeverywhere.LayoutInflater";
-
+    public static final String HOLO_EVERYWHERE_SEEKBAR = "org.holoeverywhere.widget.SeekBar";
+    public static final String HOLO_EVERYWHERE_ON_SEEKBAR_CHANGE_LISTENER = "org.holoeverywhere.widget.SeekBar.OnSeekBarChangeListener";
 	/*
 	 * SpringFramework
 	 */

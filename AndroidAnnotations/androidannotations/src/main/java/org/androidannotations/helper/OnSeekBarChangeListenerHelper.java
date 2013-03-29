@@ -15,87 +15,93 @@
  */
 package org.androidannotations.helper;
 
-import static com.sun.codemodel.JExpr.cast;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.type.TypeMirror;
-
+import com.sun.codemodel.*;
 import org.androidannotations.processing.EBeanHolder;
 import org.androidannotations.processing.OnSeekBarChangeListenerHolder;
 import org.androidannotations.rclass.IRClass;
+import org.androidannotations.helper.IdAnnotationHelper;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.type.TypeMirror;
 
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JFieldRef;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JVar;
+import static com.sun.codemodel.JExpr.cast;
 
 public class OnSeekBarChangeListenerHelper extends IdAnnotationHelper {
 
-	private final APTCodeModelHelper codeModelHelper;
+    private final APTCodeModelHelper codeModelHelper;
+    private final IdAnnotationHelper helper;
+    private ThirdPartyLibHelper holoEverywhereHelper;
 
-	public OnSeekBarChangeListenerHelper(//
-			ProcessingEnvironment processingEnv, //
-			String annotationName, //
-			IRClass rClass, //
-			APTCodeModelHelper codeModelHelper) {
+    public OnSeekBarChangeListenerHelper(//
+                                         ProcessingEnvironment processingEnv, //
+                                         String annotationName, //
+                                         IRClass rClass, //
+                                         APTCodeModelHelper codeModelHelper) {
 
-		super(processingEnv, annotationName, rClass);
+        super(processingEnv, annotationName, rClass);
 
-		this.codeModelHelper = codeModelHelper;
+        this.codeModelHelper = codeModelHelper;
+        helper = new IdAnnotationHelper(processingEnv, getTarget(), rClass);
+        holoEverywhereHelper = new ThirdPartyLibHelper(helper);
 
-	}
+    }
 
-	public OnSeekBarChangeListenerHolder getOrCreateListener(JCodeModel codeModel, EBeanHolder holder, JFieldRef idRef) {
+    public OnSeekBarChangeListenerHolder getOrCreateListener(JCodeModel codeModel, EBeanHolder holder, JFieldRef idRef) {
 
-		String idRefString = codeModelHelper.getIdStringFromIdFieldRef(idRef);
-		OnSeekBarChangeListenerHolder onSeekBarChangeListenerHolder = holder.onSeekBarChangeListeners.get(idRefString);
+        String idRefString = codeModelHelper.getIdStringFromIdFieldRef(idRef);
+        OnSeekBarChangeListenerHolder onSeekBarChangeListenerHolder = holder.onSeekBarChangeListeners.get(idRefString);
 
-		if (onSeekBarChangeListenerHolder == null) {
-			JClass seekBarClass = holder.classes().SEEKBAR;
+        if (onSeekBarChangeListenerHolder == null) {
+            JClass seekBarClass;
+            JDefinedClass onSeekbarChangeListenerClass;
+            TypeMirror viewParameterType;
+            if (holoEverywhereHelper.usesHoloEverywhere(holder))
+            {
+                seekBarClass = holder.classes().HOLO_EVERYWHERE_SEEKBAR;
+                viewParameterType = typeElementFromQualifiedName(CanonicalNameConstants.HOLO_EVERYWHERE_SEEKBAR).asType();
+                onSeekbarChangeListenerClass = codeModel.anonymousClass(holder.classes().HOLO_EVERYWHERE_ON_SEEKBAR_CHANGE_LISTENER);
+            }
+            else
+            {
+                seekBarClass = holder.classes().SEEKBAR;
+                viewParameterType = typeElementFromQualifiedName(CanonicalNameConstants.SEEKBAR).asType();
+                onSeekbarChangeListenerClass = codeModel.anonymousClass(holder.classes().ON_SEEKBAR_CHANGE_LISTENER);
+            }
 
-			JDefinedClass onSeekbarChangeListenerClass = codeModel.anonymousClass(holder.classes().ON_SEEKBAR_CHANGE_LISTENER);
 
-			JMethod onStartTrackingTouchMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onStartTrackingTouch");
-			onStartTrackingTouchMethod.param(seekBarClass, "seekBar");
-			onStartTrackingTouchMethod.annotate(Override.class);
 
-			JMethod onProgressChangedMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onProgressChanged");
-			onProgressChangedMethod.param(seekBarClass, "seekBar");
-			onProgressChangedMethod.param(codeModel.INT, "progress");
-			onProgressChangedMethod.param(codeModel.BOOLEAN, "fromUser");
-			onProgressChangedMethod.annotate(Override.class);
+            JMethod onStartTrackingTouchMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onStartTrackingTouch");
+            onStartTrackingTouchMethod.param(seekBarClass, "seekBar");
+            onStartTrackingTouchMethod.annotate(Override.class);
 
-			JMethod onStopTrackingTouchMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onStopTrackingTouch");
-			onStopTrackingTouchMethod.param(seekBarClass, "seekBar");
-			onStopTrackingTouchMethod.annotate(Override.class);
+            JMethod onProgressChangedMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onProgressChanged");
+            onProgressChangedMethod.param(seekBarClass, "seekBar");
+            onProgressChangedMethod.param(codeModel.INT, "progress");
+            onProgressChangedMethod.param(codeModel.BOOLEAN, "fromUser");
+            onProgressChangedMethod.annotate(Override.class);
 
-			JBlock block = holder.onViewChanged().body().block();
+            JMethod onStopTrackingTouchMethod = onSeekbarChangeListenerClass.method(JMod.PUBLIC, codeModel.VOID, "onStopTrackingTouch");
+            onStopTrackingTouchMethod.param(seekBarClass, "seekBar");
+            onStopTrackingTouchMethod.annotate(Override.class);
 
-			TypeMirror viewParameterType = typeElementFromQualifiedName(CanonicalNameConstants.SEEKBAR).asType();
+            JBlock block = holder.onViewChanged().body().block();
 
-			String viewParameterTypeString = viewParameterType.toString();
-			JClass viewClass = holder.refClass(viewParameterTypeString);
+            String viewParameterTypeString = viewParameterType.toString();
+            JClass viewClass = holder.refClass(viewParameterTypeString);
 
-			JExpression findViewById = cast(viewClass, holder.onViewChanged().findViewById(idRef));
+            JExpression findViewById = cast(viewClass, holder.onViewChanged().findViewById(idRef));
 
-			JVar viewVariable = block.decl(JMod.FINAL, viewClass, "view", findViewById);
-			block._if(viewVariable.ne(JExpr._null()))._then().invoke(viewVariable, "setOnSeekBarChangeListener").arg(JExpr._new(onSeekbarChangeListenerClass));
+            JVar viewVariable = block.decl(JMod.FINAL, viewClass, "view", findViewById);
+            block._if(viewVariable.ne(JExpr._null()))._then().invoke(viewVariable, "setOnSeekBarChangeListener").arg(JExpr._new(onSeekbarChangeListenerClass));
 
-			onSeekBarChangeListenerHolder = new OnSeekBarChangeListenerHolder(//
-					onStartTrackingTouchMethod, //
-					onProgressChangedMethod, //
-					onStopTrackingTouchMethod, //
-					viewVariable);
+            onSeekBarChangeListenerHolder = new OnSeekBarChangeListenerHolder(//
+                    onStartTrackingTouchMethod, //
+                    onProgressChangedMethod, //
+                    onStopTrackingTouchMethod, //
+                    viewVariable);
 
-			holder.onSeekBarChangeListeners.put(idRefString, onSeekBarChangeListenerHolder);
-		}
+            holder.onSeekBarChangeListeners.put(idRefString, onSeekBarChangeListenerHolder);
+        }
 
-		return onSeekBarChangeListenerHolder;
-	}
+        return onSeekBarChangeListenerHolder;
+    }
 }

@@ -106,6 +106,8 @@ public class EBeansHolder {
 		 * HoloEverywhre
 		 */
 		public final JClass HOLO_EVERYWHERE_LAYOUT_INFLATER = refClass(CanonicalNameConstants.HOLO_EVERYWHERE_LAYOUT_INFLATER);
+        public final JClass HOLO_EVERYWHERE_SEEKBAR = refClass(CanonicalNameConstants.HOLO_EVERYWHERE_SEEKBAR);
+        public final JClass HOLO_EVERYWHERE_ON_SEEKBAR_CHANGE_LISTENER = refClass(CanonicalNameConstants.HOLO_EVERYWHERE_ON_SEEKBAR_CHANGE_LISTENER);
 
 		/*
 		 * RoboGuice
